@@ -27,6 +27,13 @@
 # "catch the dust", tightens the clause with em dashes, and keeps the
 # closing image ("like a signature") that makes the dullness itself the
 # joke. v1 is kept below as a scored candidate so the revision is visible.
+#
+# REVISION 2 (SHA-256 cross-check): the read-back check now also
+# hashes the selected message and the bytes read back from
+# /output/entry.txt; a mismatch fails loudly instead of trusting a
+# string comparison alone.
+
+import hashlib
 
 CANDIDATES = [
     # score: boring 10, true 10, laugh 9, tight 9, landing 9 = 47
@@ -122,6 +129,11 @@ def main():
         raw = f.read()
     if raw.decode("utf-8") != message:
         print("error: /output/entry.txt does not match the selected message",
+              file=sys.stderr)
+        sys.exit(1)
+    if hashlib.sha256(message.encode("utf-8")).hexdigest() != \
+            hashlib.sha256(raw).hexdigest():
+        print("error: SHA-256 mismatch for /output/entry.txt",
               file=sys.stderr)
         sys.exit(1)
     if not (1 <= len(message) <= 200) or "\n" in message or not message.strip():
